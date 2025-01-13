@@ -50,7 +50,7 @@ jobs:
       - name: Update the kubernetes Deployment file. 
         run: |
           cat deployment/deploy.yaml
-          sed -i "s+dubemphil/hospital_frontend:.*+supportcloud160/hospital_frontend:${{ github.run_number }}+g" deployment/deploy.yaml
+          sed -i "s+dubemphil/hospital_frontend:.*+dubemphil/hospital_frontend:${{ github.run_number }}+g" deployment/deploy.yaml
           cat deployment/deploy.yaml
           
       - name: Authenticate to Azure Cloud via AZ-Cli
