@@ -21,7 +21,7 @@ const ViewDoctorAppointment = () => {
 
   const retrieveAllAppointments = async () => {
     const response = await axios.get(
-      "https://hospitalapi.dubemphilservices.online/api/appointment/doctor/id?doctorId="+doctor.id
+      "http://hospitalapi.dubemphilservices.online/api/appointment/doctor/id?doctorId="+doctor.id
     );
     console.log(response.data);
     return response.data;

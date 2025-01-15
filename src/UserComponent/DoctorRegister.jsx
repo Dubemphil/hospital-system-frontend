@@ -34,13 +34,13 @@ const DoctorRegister = () => {
   const [specialists, setSpecialists] = useState([]);
 
   const retrieveAllGenders = async () => {
-    const response = await axios.get("https://hospitalapi.dubemphilservices.online/api/user/gender");
+    const response = await axios.get("http://hospitalapi.dubemphilservices.online/api/user/gender");
     return response.data;
   };
 
   const retrieveAllSpecialist = async () => {
     const response = await axios.get(
-      "https://hospitalapi.dubemphilservices.online/api/doctor/specialist/all"
+      "http://hospitalapi.dubemphilservices.online/api/doctor/specialist/all"
     );
     return response.data;
   };
@@ -84,7 +84,7 @@ const DoctorRegister = () => {
     formData.append("experience", user.experience);
 
     axios
-      .post("https://hospitalapi.dubemphilservices.online/api/doctor/register", formData)
+      .post("http://hospitalapi.dubemphilservices.online/api/doctor/register", formData)
       .then((result) => {
         result.json().then((res) => {
           console.log(res);

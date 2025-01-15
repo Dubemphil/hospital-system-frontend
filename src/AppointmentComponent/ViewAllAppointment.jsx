@@ -19,7 +19,7 @@ const ViewAllAppointment = () => {
 
   const retrieveAllAppointments = async () => {
     const response = await axios.get(
-      "https://hospitalapi.dubemphilservices.online/api/appointment/all"
+      "http://hospitalapi.dubemphilservices.online/api/appointment/all"
     );
     console.log(response.data);
     return response.data;

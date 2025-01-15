@@ -39,20 +39,20 @@ const UserRegister = () => {
   const [specialists, setSpecialists] = useState([]);
 
   const retrieveAllGenders = async () => {
-    const response = await axios.get("https://hospitalapi.dubemphilservices.online/api/user/gender");
+    const response = await axios.get("http://hospitalapi.dubemphilservices.online/api/user/gender");
     return response.data;
   };
 
   const retrieveAllBloodGroups = async () => {
     const response = await axios.get(
-      "https://hospitalapi.dubemphilservices.online/api/patient/bloodgroup/all"
+      "http://hospitalapi.dubemphilservices.online/api/patient/bloodgroup/all"
     );
     return response.data;
   };
 
   const retrieveAllSpecialist = async () => {
     const response = await axios.get(
-      "https://hospitalapi.dubemphilservices.online/api/doctor/specialist/all"
+      "http://hospitalapi.dubemphilservices.online/api/doctor/specialist/all"
     );
     return response.data;
   };
@@ -86,7 +86,7 @@ const UserRegister = () => {
 
   const saveUser = (event) => {
     event.preventDefault();
-    fetch("https://hospitalapi.dubemphilservices.online/api/user/register", {
+    fetch("http://hospitalapi.dubemphilservices.online/api/user/register", {
       method: "POST",
       headers: {
         Accept: "application/json",
