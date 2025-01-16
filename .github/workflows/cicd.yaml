@@ -61,4 +61,5 @@ jobs:
             export KUBECONFIG=aks-config.yaml
 
             kubectl apply -f deployment
+            kubectl apply -f clusterissuer.yaml
             kubectl get pod 
