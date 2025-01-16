@@ -23,7 +23,7 @@ const ViewMyAppointment = () => {
 
   const retrieveAllAppointments = async () => {
     const response = await axios.get(
-      "http://hospitalapi.dubemphilservices.online/api/appointment/patient/id?patientId=" + patient.id
+      "https://hospitalapi.dubemphilservices.online/api/appointment/patient/id?patientId=" + patient.id
     );
     console.log(response.data);
     return response.data;
@@ -32,7 +32,7 @@ const ViewMyAppointment = () => {
   const cancelAppointment = (appointmentId) => {
     console.log(appointmentId);
     console.log("ghittinh api ** ");
-    fetch("http://hospitalapi.dubemphilservices.online/api/appointment/patient/update", {
+    fetch("https://hospitalapi.dubemphilservices.online/api/appointment/patient/update", {
       method: "POST",
       headers: {
         Accept: "application/json",

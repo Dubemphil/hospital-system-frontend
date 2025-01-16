@@ -17,7 +17,7 @@ const UserLoginForm = () => {
   };
 
   const loginAction = (e) => {
-    fetch("http://hospitalapi.dubemphilservices.online/api/user/login", {
+    fetch("https://hospitalapi.dubemphilservices.online/api/user/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
