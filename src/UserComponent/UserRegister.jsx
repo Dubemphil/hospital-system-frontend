@@ -36,7 +36,7 @@ const UserRegister = () => {
 
   const [genders, setGenders] = useState([]);
   const [bloodGroup, setBloodGroup] = useState([]);
-  const [specialists, setSpecialists] = useState([]);
+  // const [specialists, setSpecialists] = useState([]);
 
   const retrieveAllGenders = async () => {
     const response = await axios.get("/api/user/gender");
@@ -75,13 +75,14 @@ const UserRegister = () => {
     const getAllSpecialist = async () => {
       const allSpecialist = await retrieveAllSpecialist();
       if (allSpecialist) {
-        setSpecialists(allSpecialist);
+        // setSpecialists(allSpecialist);
       }
     };
 
     getAllGenders();
     getAllBloodGroup();
     getAllSpecialist();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveUser = (event) => {

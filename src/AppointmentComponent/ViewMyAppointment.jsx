@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import React from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const ViewMyAppointment = () => {
@@ -19,6 +19,7 @@ const ViewMyAppointment = () => {
     };
 
     getAllAppointments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const retrieveAllAppointments = async () => {

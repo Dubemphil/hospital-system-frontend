@@ -40,6 +40,7 @@ jobs:
       - name: Build Production Static Bundle
         run: npm run build
         env:
+          CI: false
           REACT_APP_API_BASE_URL: "" # Same-origin /api path through Load Balancer
 
       # Direct Workload Identity Federation (NO Service Account needed)

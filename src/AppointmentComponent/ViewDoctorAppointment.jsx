@@ -17,6 +17,7 @@ const ViewDoctorAppointment = () => {
     };
 
     getAllAppointments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const retrieveAllAppointments = async () => {
