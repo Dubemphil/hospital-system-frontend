@@ -19,7 +19,7 @@ const AddAppointment = () => {
 
   const saveAppointment = (event) => {
     event.preventDefault();
-    fetch("http://192.168.0.2:8080/api/appointment/patient/add", {
+    fetch("/api/appointment/patient/add", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -62,6 +62,27 @@ const AddAppointment = () => {
           <div className="card-body">
             <form onSubmit={saveAppointment}>
               
+              
+              <div className="mb-3">
+                <label className="form-label">
+                  <b>Select Regional Clinic Branch</b>
+                </label>
+                <select
+                  name="clinicBranchId"
+                  onChange={handleUserInput}
+                  className="form-control"
+                  value={appointment.clinicBranchId}
+                  required
+                >
+                  <option value="1">Branch 1 - North Regional Ambulatory Clinic</option>
+                  <option value="2">Branch 2 - South Ambulatory & Urgent Care</option>
+                  <option value="3">Branch 3 - Central City Ambulatory Clinic</option>
+                  <option value="4">Branch 4 - Eastside Health & Pediatrics</option>
+                  <option value="5">Branch 5 - West Ambulatory Care Pavilion</option>
+                  <option value="6">Branch 6 - Metro Outpatient & Specialty Center</option>
+                </select>
+              </div>
+
               <div className="mb-3 text-color">
                 <label htmlFor="title" className="form-label">
                   <b>Problem</b>

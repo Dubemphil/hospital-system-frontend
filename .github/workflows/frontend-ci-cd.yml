@@ -1,0 +1,67 @@
+name: Horizon Health Partners - Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+  BUCKET_NAME: ${{ secrets.GCP_PROJECT_ID }}-hospital-frontend
+
+jobs:
+  build-and-deploy:
+    name: Build React SPA & Deploy to GCS CDN
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Build Production Static Bundle
+        run: npm run build
+        env:
+          REACT_APP_API_BASE_URL: "" # Same-origin /api path through Load Balancer
+
+      # Direct Workload Identity Federation (NO Service Account needed)
+      - name: Authenticate to Google Cloud via WIF
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Google Cloud SDK
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Sync Static Bundle to GCS Frontend Bucket
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying compiled assets to Google Cloud Storage..."
+          gcloud storage rsync -r -d build/ gs://${{ env.BUCKET_NAME }}/
+
+      - name: Invalidate Cloud CDN Cache for Instant Update
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        run: |
+          echo "Invalidating Cloud CDN edge cache..."
+          gcloud compute url-maps invalidate-cdn-cache hhp-url-map --path="/*" --async || true

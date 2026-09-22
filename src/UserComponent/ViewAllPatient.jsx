@@ -17,13 +17,13 @@ const ViewAllPatient = () => {
   }, []);
 
   const retrieveAllPatient = async () => {
-    const response = await axios.get("https://hospitalapi.dubemphilservices.online/api/patient/all");
+    const response = await axios.get("/api/patient/all");
     console.log(response.data);
     return response.data;
   };
 
   const deletePatient = (patientId) => {
-    fetch("https://hospitalapi.dubemphilservices.online/api/user/delete/id?userId=" + patientId, {
+    fetch("/api/user/delete/id?userId=" + patientId, {
       method: "GET",
       headers: {
         Accept: "application/json",
