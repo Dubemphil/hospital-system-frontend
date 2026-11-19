@@ -12,7 +12,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: hospital-system-staging-frontend-assets
+  S3_BUCKET: hospital-system-dev-frontend-assets
   CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
 permissions:
