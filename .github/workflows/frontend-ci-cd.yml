@@ -1,4 +1,4 @@
-name: Hospital System - Frontend CI/CD (AWS S3 & CloudFront)
+name: Hospital System - Frontend CI/CD (Dev to Prod Promotion)
 
 on:
   push:
@@ -12,8 +12,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: hospital-system-dev-frontend-assets
-  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+  DEV_S3_BUCKET: hospital-system-dev-frontend-assets
+  PROD_S3_BUCKET: hospital-system-prod-frontend-assets
 
 permissions:
   contents: read
@@ -50,12 +50,12 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-      # 4. Compile Production React Bundle
+      # 4. Compile Production React Bundle (Single-origin /api routed through CloudFront)
       - name: Build Production Static Bundle
         run: npm run build
         env:
           CI: false
-          REACT_APP_API_BASE_URL: "" # Single-origin /api routed through CloudFront to ALB
+          REACT_APP_API_BASE_URL: ""
 
       # 5. Archive Build Artifact
       - name: Upload Build Artifact
@@ -66,26 +66,23 @@ jobs:
           retention-days: 1
 
   # ============================================================================
-  # Stage 2: Deploy to AWS S3 & Invalidate CloudFront CDN Cache (Keyless OIDC)
+  # Stage 2: Automated Deploy to DEV Environment (S3 & CloudFront)
   # ============================================================================
-  deploy:
-    name: Deploy to S3 & CloudFront
+  deploy-dev:
+    name: Deploy to DEV Environment (S3 & CloudFront)
     needs: security-and-build
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: development
 
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      # Download pre-built production artifacts from Stage 1
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build
           path: build/
 
-      # Keyless OIDC Authentication to AWS (Zero permanent credentials)
       - name: Configure AWS Credentials via GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -93,17 +90,54 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
 
-      # Synchronize static assets to S3 private bucket
-      - name: Sync Static Bundle to Amazon S3
+      - name: Sync Static Bundle to DEV Amazon S3
         run: |
-          echo "Deploying compiled assets to Amazon S3 bucket: ${{ env.S3_BUCKET }}..."
-          aws s3 sync build/ s3://${{ env.S3_BUCKET }}/ --delete
+          echo "Deploying to DEV S3 bucket: ${{ env.DEV_S3_BUCKET }}..."
+          aws s3 sync build/ s3://${{ env.DEV_S3_BUCKET }}/ --delete
 
-      # Invalidate CloudFront edge cache for instant global rollout
-      - name: Invalidate CloudFront Cache
+      - name: Invalidate DEV CloudFront Cache
+        if: env.DEV_CF_ID != ''
+        env:
+          DEV_CF_ID: ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID || secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          echo "Invalidating CloudFront Distribution ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}..."
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-          echo "CloudFront cache invalidation successfully submitted!"
+          echo "Invalidating DEV CloudFront Distribution: $DEV_CF_ID..."
+          aws cloudfront create-invalidation --distribution-id "$DEV_CF_ID" --paths "/*"
+
+  # ============================================================================
+  # Stage 3: Promotion to PROD Environment (Guarded by GitHub Environment Approval)
+  # ============================================================================
+  promote-prod:
+    name: Promote to PRODUCTION Environment (S3 & CloudFront)
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://devopsstandard.name.ng
+
+    steps:
+      - name: Download Same Verified Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: build/
+
+      - name: Configure AWS Credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Sync Verified Bundle to PRODUCTION Amazon S3
+        run: |
+          echo "Promoting verified bundle to PRODUCTION S3 bucket: ${{ env.PROD_S3_BUCKET }}..."
+          aws s3 sync build/ s3://${{ env.PROD_S3_BUCKET }}/ --delete
+
+      - name: Invalidate PRODUCTION CloudFront Cache
+        if: env.PROD_CF_ID != ''
+        env:
+          PROD_CF_ID: ${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID || secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          echo "Invalidating PRODUCTION CloudFront Distribution: $PROD_CF_ID..."
+          aws cloudfront create-invalidation --distribution-id "$PROD_CF_ID" --paths "/*"
+          echo "Production deployment successfully completed!"
