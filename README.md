@@ -16,7 +16,7 @@ This repository is the frontend user interface layer of the decoupled three-tier
 
 | Repository | Tech Stack | Role |
 | :--- | :--- | :--- |
-| [🏗️ `hospital_terraform`](https://github.com/Dubemphil/hospital_terraform) | Terraform, AWS (VPC, ECS, RDS, CloudFront, KMS, OIDC) | Core Cloud Infrastructure & Security Foundation |
+| [🏗️ `hospital-system-infra`](https://github.com/Dubemphil/hospital-system-infra) | Terraform, AWS (VPC, ECS, RDS, CloudFront, KMS, OIDC) | Core Cloud Infrastructure & Security Foundation |
 | [☕ `hospital_backend`](https://github.com/Dubemphil/hospital-system-backend) | Spring Boot (Java), MySQL, Docker, Maven | RESTful Healthcare API & Business Logic |
 | [⚛️ `hospital_frontend`](https://github.com/Dubemphil/hospital-system-frontend) | React 18, HTML5/CSS3, Single-Page App | Patient & Staff Interactive Web Portal |
 
