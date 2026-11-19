@@ -1,17 +1,40 @@
-FROM node:18-alpine
+# ==============================================================================
+# Multi-stage Build for Hospital React Frontend SPA
+# Production Nginx Alpine Web Server
+# ==============================================================================
 
+# Stage 1: Build the React Application
+FROM node:18-alpine AS builder
+WORKDIR /app
 
+# Install dependencies with legacy peer deps for compatibility
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
+# Copy source code and build production bundle
 COPY . .
+ENV CI=false
+ENV REACT_APP_API_BASE_URL=""
+RUN npm run build
 
-RUN npm install --save-dev @babel/plugin-proposal-private-property-in-object
-RUN npm install --save react react-dom @types/react @types/react-dom
-RUN npm install react-scripts@3.0.1  --save
-RUN npm install
+# Stage 2: Serve with Production-grade Nginx Alpine
+FROM nginx:1.25-alpine
+WORKDIR /usr/share/nginx/html
 
-# Attempt to fix vulnerabilities, but continue if it fails
-RUN npm audit fix --force || echo "Continuing despite npm audit fix failures"
+# Clean default Nginx static files
+RUN rm -rf ./*
 
-EXPOSE 3000
+# Copy built artifacts from builder stage
+COPY --from=builder /app/build ./
 
-CMD ["npm", "start"]
+# Copy custom Nginx configuration for SPA routing & caching
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose standard HTTP port
+EXPOSE 80
+
+# Health check probe
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

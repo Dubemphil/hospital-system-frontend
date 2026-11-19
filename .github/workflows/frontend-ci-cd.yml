@@ -1,68 +1,110 @@
-name: Horizon Health Partners - Frontend CI/CD
+name: Hospital System - Frontend CI/CD (AWS S3 & CloudFront)
 
 on:
   push:
     branches:
-      - master
       - main
+      - master
   pull_request:
     branches:
-      - master
       - main
+      - master
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
-  BUCKET_NAME: ${{ secrets.GCP_PROJECT_ID }}-hospital-frontend
+  AWS_REGION: us-east-1
+  S3_BUCKET: hospital-system-staging-frontend-assets
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  build-and-deploy:
-    name: Build React SPA & Deploy to GCS CDN
+  # ============================================================================
+  # Stage 1: Security Scanning & Build Verification
+  # ============================================================================
+  security-and-build:
+    name: Security & Build Verification
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Node.js
+      # 1. Gitleaks: Secret Detection
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      # 2. Node.js Setup
+      - name: Set up Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
 
-      - name: Install Dependencies
+      # 3. Install Dependencies
+      - name: Install Node Dependencies
         run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
+      # 4. Compile Production React Bundle
       - name: Build Production Static Bundle
         run: npm run build
         env:
           CI: false
-          REACT_APP_API_BASE_URL: "" # Same-origin /api path through Load Balancer
+          REACT_APP_API_BASE_URL: "" # Single-origin /api routed through CloudFront to ALB
 
-      # Direct Workload Identity Federation (NO Service Account needed)
-      - name: Authenticate to Google Cloud via WIF
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-        uses: google-github-actions/auth@v2
+      # 5. Archive Build Artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
         with:
-          workload_identity_provider: ${{ env.WIF_PROVIDER }}
-          project_id: ${{ env.PROJECT_ID }}
+          name: react-build
+          path: build/
+          retention-days: 1
 
-      - name: Configure Google Cloud SDK
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-        uses: google-github-actions/setup-gcloud@v2
+  # ============================================================================
+  # Stage 2: Deploy to AWS S3 & Invalidate CloudFront CDN Cache (Keyless OIDC)
+  # ============================================================================
+  deploy:
+    name: Deploy to S3 & CloudFront
+    needs: security-and-build
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
 
-      - name: Sync Static Bundle to GCS Frontend Bucket
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Download pre-built production artifacts from Stage 1
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: build/
+
+      # Keyless OIDC Authentication to AWS (Zero permanent credentials)
+      - name: Configure AWS Credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      # Synchronize static assets to S3 private bucket
+      - name: Sync Static Bundle to Amazon S3
         run: |
-          echo "Deploying compiled assets to Google Cloud Storage..."
-          gcloud storage rsync -r -d build/ gs://${{ env.BUCKET_NAME }}/
+          echo "Deploying compiled assets to Amazon S3 bucket: ${{ env.S3_BUCKET }}..."
+          aws s3 sync build/ s3://${{ env.S3_BUCKET }}/ --delete
 
-      - name: Invalidate Cloud CDN Cache for Instant Update
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+      # Invalidate CloudFront edge cache for instant global rollout
+      - name: Invalidate CloudFront Cache
         run: |
-          echo "Invalidating Cloud CDN edge cache..."
-          gcloud compute url-maps invalidate-cdn-cache hhp-url-map --path="/*" --async || true
+          echo "Invalidating CloudFront Distribution ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+          echo "CloudFront cache invalidation successfully submitted!"
