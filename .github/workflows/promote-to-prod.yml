@@ -1,0 +1,60 @@
+name: Hospital System - Frontend Promote to Production (Manual)
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  PROD_S3_BUCKET: hospital-system-prod-frontend-assets
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-promote-prod:
+    name: Build & Promote to PRODUCTION (S3 & CloudFront)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://devopsstandard.name.ng
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Build Production Static Bundle
+        run: npm run build
+        env:
+          CI: false
+          REACT_APP_API_BASE_URL: ""
+
+      - name: Configure AWS Credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Sync Verified Bundle to PRODUCTION Amazon S3
+        run: |
+          echo "Promoting build to PRODUCTION S3 bucket: ${{ env.PROD_S3_BUCKET }}..."
+          aws s3 sync build/ s3://${{ env.PROD_S3_BUCKET }}/ --delete
+
+      - name: Invalidate PRODUCTION CloudFront Cache
+        if: env.PROD_CF_ID != ''
+        env:
+          PROD_CF_ID: ${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID || secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          echo "Invalidating PRODUCTION CloudFront Distribution: $PROD_CF_ID..."
+          aws cloudfront create-invalidation --distribution-id "$PROD_CF_ID" --paths "/*"
+          echo "Production deployment successfully completed!"
