@@ -1,0 +1,15 @@
+# ==============================================================================
+# Gitleaks Configuration & Allowlist
+# ==============================================================================
+title = "Hospital System Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignore legacy deployment templates and documentation"
+paths = [
+  '''(^|/)deployment/.*''',
+  '''(^|/)architecture.*''',
+  '''(^|/)clusterissuer\.yaml$'''
+]
