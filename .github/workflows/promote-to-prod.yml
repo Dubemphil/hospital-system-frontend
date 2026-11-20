@@ -58,3 +58,4 @@ jobs:
           echo "Invalidating PRODUCTION CloudFront Distribution: $PROD_CF_ID..."
           aws cloudfront create-invalidation --distribution-id "$PROD_CF_ID" --paths "/*"
           echo "Production deployment successfully completed!"
+
