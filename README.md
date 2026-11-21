@@ -22,12 +22,12 @@ This repository is the frontend user interface layer of the decoupled three-tier
 
 * **Live Web Portal**: [https://www.devopsstandard.name.ng](https://www.devopsstandard.name.ng)
 
-![alt text](image.png)
+![Live Web Portal](image.png)
 
 * **Live Direct CDN**: [https://d1v3mxc3uivi1w.cloudfront.net](https://d1v3mxc3uivi1w.cloudfront.net)
 * **Backend API Health Check**: [https://d1v3mxc3uivi1w.cloudfront.net/api/health](https://d1v3mxc3uivi1w.cloudfront.net/api/health)
 
-![alt text](image-1.png)
+![Backend API Health Check Response](image-1.png)
 ---
 
 ## 🏛️ Architecture & Runtime Overview
