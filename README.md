@@ -6,7 +6,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Multi--stage%20Nginx-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20OIDC-2088FF?logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
-> **Modern Single-Page Application (SPA)** for the **Horizon Health Partners (HHP)** hospital management platform, built with React 18, securely hosted on Amazon S3, and globally distributed via Amazon CloudFront with modern Origin Access Control (OAC).
+> **Modern Single-Page Application (SPA)** for the hospital management platform, built with React 18, securely hosted on Amazon S3, and globally distributed via Amazon CloudFront with modern Origin Access Control (OAC).
 
 ---
 
@@ -17,10 +17,24 @@ This repository is the frontend user interface layer of the decoupled three-tier
 | Repository | Tech Stack | Role |
 | :--- | :--- | :--- |
 | [🏗️ `hospital-system-infra`](https://github.com/Dubemphil/hospital-system-infra) | Terraform, AWS (VPC, ECS, RDS, CloudFront, KMS, OIDC) | Core Cloud Infrastructure & Security Foundation |
-| [☕ `hospital_backend`](https://github.com/Dubemphil/hospital-system-backend) | Spring Boot (Java), MySQL, Docker, Maven | RESTful Healthcare API & Business Logic |
-| [⚛️ `hospital_frontend`](https://github.com/Dubemphil/hospital-system-frontend) | React 18, HTML5/CSS3, Single-Page App | Patient & Staff Interactive Web Portal |
+| [☕ `hospital-system-backend`](https://github.com/Dubemphil/hospital-system-backend) | Spring Boot (Java), MySQL, Docker, Maven | RESTful Healthcare API & Business Logic |
+| [⚛️ `hospital-system-frontend`](https://github.com/Dubemphil/hospital-system-frontend) | React 18, HTML5/CSS3, Single-Page App | Patient & Staff Interactive Web Portal |
 
+* **Live Web Portal**: [https://www.devopsstandard.name.ng](https://www.devopsstandard.name.ng)
+
+![alt text](image.png)
+
+* **Live Direct CDN**: [https://d1v3mxc3uivi1w.cloudfront.net](https://d1v3mxc3uivi1w.cloudfront.net)
+* **Backend API Health Check**: [https://d1v3mxc3uivi1w.cloudfront.net/api/health](https://d1v3mxc3uivi1w.cloudfront.net/api/health)
+
+![alt text](image-1.png)
 ---
+
+## 🏛️ Architecture & Runtime Overview
+
+<p align="center">
+  <img src="./architecture-diagram.svg" alt="Enterprise Cloud Architecture and DevSecOps Blueprint" width="100%" />
+</p>
 
 ## 🏛️ Single-Origin CloudFront Architecture (Zero CORS)
 
@@ -79,44 +93,3 @@ The GitHub Actions workflow (`.github/workflows/frontend-ci-cd.yml`) automates b
 4. **Amazon S3 Delta Synchronization**: Deploys updated bundles with `aws s3 sync build/ s3://${S3_BUCKET} --delete` to prune obsolete hashes.
 5. **Global CDN Edge Invalidation**: Automatically invalidates CloudFront edge caches (`/*`) ensuring users immediately receive updated frontend releases without cache staleness.
 
----
-
-## 🚀 Local Development Setup
-
-### Prerequisites
-* **Node.js 18.x+**
-* **npm 9.x+**
-
-### Run Locally
-```bash
-# 1. Clone the repository
-git clone https://github.com/Dubemphil/hospital-system-frontend.git
-cd hospital-system-frontend
-
-# 2. Install dependencies
-npm install --legacy-peer-deps
-
-# 3. Start local development server
-npm start
-```
-The React development server runs at `http://localhost:3000`. API requests to `/api/*` are automatically forwarded to `http://localhost:8080` via the proxy configured in `package.json`.
-
----
-
-## 🐳 Containerized Run (Docker & Nginx)
-
-For container-native environments or local verification with production Nginx:
-
-```bash
-# Build multi-stage production Nginx image
-docker build -t hospital-system-frontend:local .
-
-# Run container on port 3000
-docker run -p 3000:80 hospital-system-frontend:local
-```
-Navigate to `http://localhost:3000` to inspect the production-optimized build.
-
----
-
-## 📄 License
-This project is licensed under the MIT License.

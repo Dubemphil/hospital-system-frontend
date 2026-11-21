@@ -1,4 +1,4 @@
-name: Hospital System - Frontend CI/CD (Dev to Prod Promotion)
+name: Frontend Service in Development (Build, Scan & Deploy)
 
 on:
   push:

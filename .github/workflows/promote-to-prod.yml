@@ -1,4 +1,4 @@
-name: Hospital System - Frontend Promote to Production (Manual)
+name: Frontend Service in Production (Promote S3 & Invalidate)
 
 on:
   workflow_dispatch:
