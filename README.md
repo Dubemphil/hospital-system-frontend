@@ -33,7 +33,7 @@ This repository is the frontend user interface layer of the decoupled three-tier
 ## 🏛️ Architecture & Runtime Overview
 
 <p align="center">
-  <img src="./architecture-diagram.svg" alt="Enterprise Cloud Architecture and DevSecOps Blueprint" width="100%" />
+  <img src="./enterprise_hospital_system_cloud_devsecops_blueprint.svg" alt="Enterprise Cloud Architecture and DevSecOps Blueprint" width="100%" />
 </p>
 
 ## 🏛️ Single-Origin CloudFront Architecture (Zero CORS)
